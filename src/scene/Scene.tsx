@@ -43,6 +43,9 @@ export function Scene() {
           luminanceThreshold={0.72}
           luminanceSmoothing={0.28}
           radius={0.72}
+          // El bloom es luz difusa por definición: a media resolución en móvil
+          // se ve igual y cuesta la cuarta parte de píxeles.
+          resolutionScale={quality.tier === 'low' ? 0.5 : 1}
         />
         <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
         {/* Sin MSAA (móvil), SMAA es el único antialias: ahí sí hace falta. */}

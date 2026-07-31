@@ -34,15 +34,20 @@ const HIGH: QualitySettings = {
 };
 
 /**
- * Móvil. El DPR sube a 2 — es lo que más define la nitidez percibida, y el
- * presupuesto lo permite tras aligerar el shader y quitar la sombra. Si aun
- * así no llega a 60 FPS, `PerformanceMonitor` lo baja en caliente.
- * El filtrado anisotrópico se mantiene alto: cuesta muy poco y es
- * justamente lo que salva la textura cuando la carta se inclina.
+ * Móvil.
+ *
+ * El DPR es lo único que escala con el cuadrado: a DPR 2 en un iPhone de
+ * `devicePixelRatio` 3 se midieron 30 FPS. Vuelve a 1.5, que es el punto
+ * donde este shader sostiene 60.
+ *
+ * Bajar el DPR **no** deshace la ganancia de nitidez: la resolución de la
+ * textura y la del render son independientes. Las texturas siguen al doble
+ * (1500x2100) y la anisotropía alta, que es lo que evita que la impresión se
+ * vea blanda — y ambas cuestan ancho de banda, no fill rate.
  */
 const LOW: QualitySettings = {
   tier: 'low',
-  maxDpr: 2,
+  maxDpr: 1.5,
   msaa: 0,
   contactShadows: false,
   sparkleLayers: 2,

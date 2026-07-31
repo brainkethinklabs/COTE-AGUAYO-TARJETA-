@@ -118,22 +118,37 @@ export function startDeviceOrientation(state: OrientationState): void {
   state.status = 'esperando-gesto (iOS)';
   log(state.status);
 
-  let asked = false;
-  const gestureTypes = ['touchend', 'click', 'pointerup'];
+  let granted = false;
+  let inFlight = false;
+
+  /**
+   * Sólo `touchend` y `click`. `pointerup` NO cuenta como activación válida
+   * en iOS: pedir el permiso desde ahí devuelve NotAllowedError. Y si se
+   * marcase el intento como consumido, se quemaría la única oportunidad —
+   * por eso aquí se reintenta en cada gesto hasta conseguirlo. En un tap,
+   * `click` llega justo después de `touchend`, así que el reintento suele
+   * ocurrir dentro del mismo toque.
+   */
+  const gestureTypes = ['touchend', 'click'];
 
   const onGesture = () => {
-    if (asked) return;
-    asked = true;
-    gestureTypes.forEach((t) => window.removeEventListener(t, onGesture));
+    if (granted || inFlight) return;
+    inFlight = true;
 
     request()
       .then((result) => {
+        inFlight = false;
         state.status = `permiso: ${result}`;
         log(state.status);
-        if (result === 'granted') listen();
+        if (result === 'granted') {
+          granted = true;
+          gestureTypes.forEach((t) => window.removeEventListener(t, onGesture));
+          listen();
+        }
       })
       .catch((err) => {
-        state.status = `permiso-rechazado: ${String(err)}`;
+        inFlight = false;
+        state.status = `reintentando permiso (${String(err).slice(0, 40)})`;
         log(state.status);
       });
   };

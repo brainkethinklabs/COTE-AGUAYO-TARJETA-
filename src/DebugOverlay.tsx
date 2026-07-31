@@ -16,7 +16,8 @@ export function DebugOverlay() {
   const quality = detectQuality();
 
   useEffect(() => {
-    const id = window.setInterval(() => setInfo(readGyroDiagnostics()), 150);
+    // 300 ms: el panel no debe falsear la medición de FPS que él mismo muestra.
+    const id = window.setInterval(() => setInfo(readGyroDiagnostics()), 300);
     // También accesible desde la consola del navegador del teléfono, que es
     // más fiable que leer un panel mientras se inclina el aparato.
     (window as unknown as Record<string, unknown>).cardDebug = () => ({
