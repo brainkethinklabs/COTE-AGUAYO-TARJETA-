@@ -14,6 +14,7 @@ import { readTiltInput } from '../../hooks/useTiltInput';
 import { INTRO, MOTION } from '../../config';
 import { detectQuality } from '../../quality';
 import { cardMotion } from './motionState';
+import { detailFade, zoomState } from './zoomState';
 import { isGyroActive } from '../../hooks/useTiltInput';
 
 import frontUrl from '../../assets/front.webp';
@@ -118,8 +119,12 @@ export function Card({ intro }: CardProps) {
     const offsetX = tilt.px * MOTION.parallax;
     const offsetY = tilt.py * MOTION.parallax * 0.7;
 
-    g.position.y = floatY + offsetY;
-    g.position.x = floatX + offsetX;
+    // Todo el movimiento de traslación se divide por el zoom: en unidades de
+    // mundo sería el mismo, pero en pantalla se vería multiplicado, y lo que
+    // era una flotación sutil se volvería un vaivén al acercarse.
+    const z = zoomState.current;
+    g.position.y = (floatY + offsetY) / z;
+    g.position.x = (floatX + offsetX) / z;
 
     // Rotación = giro del usuario + inclinación hacia el cursor + balanceo de reposo.
     // El orden Euler por defecto (XYZ) aplica X en espacio de mundo, así que
@@ -129,6 +134,13 @@ export function Card({ intro }: CardProps) {
     g.rotation.z = Math.sin(t * MOTION.breathSpeed * 0.79 + 1.3) * MOTION.breathTilt * 0.55;
 
     g.scale.setScalar(THREE.MathUtils.lerp(INTRO.scaleFrom, 1, appear));
+
+    // Al acercarse, el laminado se apaga para dejar ver la impresión.
+    const detail = detailFade();
+    frontMaterial.setDetailFade(detail);
+    backMaterial.setDetailFade(detail);
+    // El canto cromado también deja de reflejar tanto de cerca.
+    edgeMaterial.envMapIntensity = 0.35 + 1.15 * detail;
 
     frontMaterial.update(t, intro.current, spin.spin, input, lightPos);
     backMaterial.update(t, intro.current, spin.spin, input, lightPos);

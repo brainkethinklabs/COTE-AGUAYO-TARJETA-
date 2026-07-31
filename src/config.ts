@@ -92,6 +92,23 @@ export const HOLO = {
   sweepIntensity: 0.5,
 } as const;
 
+export const ZOOM = {
+  /** Algo más lejos que el encuadre base, por si se quiere ver entera. */
+  min: 0.8,
+  /** 3.5x: suficiente para leer la letra pequeña del reverso. */
+  max: 3.5,
+  /** Rueda del ratón: factor de zoom por unidad de scroll. */
+  wheelSensitivity: 0.0018,
+  /** Suavizado del acercamiento. No hay rebote: el zoom se queda donde lo dejás. */
+  damping: 8,
+  /**
+   * A partir de aquí el laminado se apaga. Acercarse es querer ver el
+   * detalle impreso, y el reflejo es justo lo que lo tapa.
+   */
+  fadeStart: 1.15,
+  fadeEnd: 2.3,
+} as const;
+
 export const PARTICLES = {
   count: 150,
   radius: 3.4,

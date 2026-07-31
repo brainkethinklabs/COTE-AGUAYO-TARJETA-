@@ -21,7 +21,17 @@ npm run dev
 | Inclinar el teléfono | Igual que el cursor, vía giroscopio |
 | Arrastrar en horizontal | Giro de 360°, con inercia; es como se llega al reverso |
 | Arrastrar en vertical | Asoma por arriba o por abajo (máx. 50°) y vuelve al frente |
+| Rueda / pellizco | Zoom de 0.8x a 3.5x, y se queda donde lo dejes |
 | Click / tap | La voltea 180° |
+
+Al acercarse, el laminado se apaga: brillo, foil y barrido bajan, y las
+partículas se desvanecen. Acercarse es querer leer lo impreso, y el reflejo
+especular es exactamente lo que lo tapa. No se apaga del todo — una carta
+plastificada sin nada de brillo deja de parecer física.
+
+El zoom mueve la cámara, no escala la carta: así la perspectiva se abre y el
+objeto se siente físico al mirarlo de cerca. Todo el movimiento de traslación
+se divide por el zoom, o la flotación sutil se convertiría en un vaivén.
 
 Los dos ejes se comportan distinto a propósito. El horizontal da la vuelta
 completa, con un imán suave que al soltar alinea siempre a una de las dos

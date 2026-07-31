@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { readGyroDiagnostics } from './hooks/useTiltInput';
 import { detectQuality } from './quality';
 import { cardMotion } from './components/Card/motionState';
+import { zoomState } from './components/Card/zoomState';
 
 const DEG = 180 / Math.PI;
 
@@ -55,6 +56,7 @@ export function DebugOverlay() {
     ['estado', info.status],
     ['gyro x/y', `${info.x.toFixed(2)} / ${info.y.toFixed(2)}`],
     ['puntero x/y', `${info.pointerX.toFixed(2)} / ${info.pointerY.toFixed(2)}`],
+    ['zoom', `${zoomState.current.toFixed(2)}x`],
     ['giro horizontal', `${(cardMotion.spin * DEG).toFixed(0)}°`],
     ['inclin. vertical', `${(cardMotion.pitch * DEG).toFixed(0)}°`],
     ['tilt x/y', `${(cardMotion.tiltX * DEG).toFixed(0)}° / ${(cardMotion.tiltY * DEG).toFixed(0)}°`],

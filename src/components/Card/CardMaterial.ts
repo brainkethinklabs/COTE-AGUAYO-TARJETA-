@@ -30,6 +30,9 @@ interface HolographicOptions {
 }
 
 export class HolographicMaterial extends THREE.ShaderMaterial {
+  /** Valores de reposo, para poder atenuarlos y restaurarlos con el zoom. */
+  private readonly base: { gloss: number; foil: number; sweep: number };
+
   constructor(
     map: THREE.Texture,
     { softness = 1, gloss = 1, sparkleLayers = 2 }: HolographicOptions = {},
@@ -72,6 +75,29 @@ export class HolographicMaterial extends THREE.ShaderMaterial {
         uPointerLightPos: { value: new THREE.Vector3(0, 0, 6) },
       },
     });
+
+    this.base = {
+      gloss,
+      foil: HOLO.foil * softness,
+      sweep: HOLO.sweepIntensity * softness,
+    };
+  }
+
+  /**
+   * Atenúa el laminado al acercarse.
+   *
+   * @param detail 1 con la carta entera en pantalla, 0 en el máximo acercamiento.
+   *
+   * Acercarse es querer leer lo impreso, y el reflejo especular es
+   * exactamente lo que lo tapa. No se apaga del todo —una carta plastificada
+   * sin nada de brillo deja de parecer física— pero baja lo suficiente para
+   * que el barniz no compita con la tinta.
+   */
+  setDetailFade(detail: number) {
+    const u = this.uniforms;
+    u.uGloss.value = this.base.gloss * (0.12 + 0.88 * detail);
+    u.uFoil.value = this.base.foil * (0.3 + 0.7 * detail);
+    u.uSweepIntensity.value = this.base.sweep * (0.08 + 0.92 * detail);
   }
 
   /** Escritura directa de los uniformes animados (sin allocations por frame). */

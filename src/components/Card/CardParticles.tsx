@@ -5,6 +5,7 @@ import vertexShader from '../../shaders/particles.vert.glsl';
 import fragmentShader from '../../shaders/particles.frag.glsl';
 import { PARTICLES } from '../../config';
 import { detectQuality } from '../../quality';
+import { detailFade } from './zoomState';
 
 /**
  * Motas de energía alrededor de la carta.
@@ -72,7 +73,9 @@ export function CardParticles({ intro }: { intro: RefObject<number> }) {
   useFrame((_, dt) => {
     time.current += dt * PARTICLES.speed * 10;
     material.uniforms.uTime.value = time.current;
-    material.uniforms.uIntro.value = intro.current ?? 0;
+    // Se desvanecen al acercarse: la cámara entra en la nube de partículas y,
+    // además, inspeccionando el detalle sólo estorbarían.
+    material.uniforms.uIntro.value = (intro.current ?? 0) * detailFade();
   });
 
   return <points geometry={geometry} material={material} frustumCulled={false} />;

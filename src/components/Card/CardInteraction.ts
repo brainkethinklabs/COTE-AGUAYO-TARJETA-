@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useThree } from '@react-three/fiber';
-import { MOTION } from '../../config';
+import { MOTION, ZOOM } from '../../config';
+import { zoomState, clampZoom } from './zoomState';
 
 const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), max);
 
@@ -24,6 +25,9 @@ export interface SpinState {
  *   no se mira de canto ni cabeza abajo; asomarse por arriba o por abajo da
  *   volumen, pero el frente siempre vuelve a estar de cara.
  *
+ * El zoom se hace con dos dedos o con la rueda, y **se queda donde lo dejes**:
+ * es un estado, no un gesto momentáneo.
+ *
  * No hay botones ni HUD: el objeto es la interfaz.
  */
 export function useCardInteraction() {
@@ -38,7 +42,32 @@ export function useCardInteraction() {
     let travelled = 0;
     let lastTime = 0;
 
+    /** Punteros activos, para distinguir arrastre de pellizco. */
+    const active = new Map<number, { x: number; y: number }>();
+    let pinchStartDistance = 0;
+    let pinchStartZoom = 1;
+    /** Si hubo pellizco, al soltar no se debe voltear la carta. */
+    let pinched = false;
+
+    const distanceBetweenPointers = () => {
+      const [a, b] = [...active.values()];
+      return Math.hypot(a.x - b.x, a.y - b.y);
+    };
+
     const onDown = (e: PointerEvent) => {
+      active.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+      if (active.size >= 2) {
+        // Empieza el pellizco: el arrastre cede el paso.
+        s.dragging = false;
+        s.velocity = 0;
+        pointerId = null;
+        pinched = true;
+        pinchStartDistance = distanceBetweenPointers();
+        pinchStartZoom = zoomState.target;
+        return;
+      }
+
       if (pointerId !== null) return;
       pointerId = e.pointerId;
       domElement.setPointerCapture(e.pointerId);
@@ -47,10 +76,23 @@ export function useCardInteraction() {
       lastX = e.clientX;
       lastY = e.clientY;
       travelled = 0;
+      pinched = false;
       lastTime = performance.now();
     };
 
     const onMove = (e: PointerEvent) => {
+      if (active.has(e.pointerId)) {
+        active.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      }
+
+      if (active.size >= 2) {
+        const d = distanceBetweenPointers();
+        if (pinchStartDistance > 0) {
+          zoomState.target = clampZoom(pinchStartZoom * (d / pinchStartDistance));
+        }
+        return;
+      }
+
       if (pointerId !== e.pointerId) return;
       const now = performance.now();
       const dt = Math.max((now - lastTime) / 1000, 1 / 240);
@@ -75,6 +117,11 @@ export function useCardInteraction() {
     };
 
     const onUp = (e: PointerEvent) => {
+      active.delete(e.pointerId);
+
+      // Al levantar un dedo del pellizco, el otro no debe heredar el arrastre.
+      if (active.size < 2) pinchStartDistance = 0;
+
       if (pointerId !== e.pointerId) return;
       if (domElement.hasPointerCapture(e.pointerId)) {
         domElement.releasePointerCapture(e.pointerId);
@@ -82,23 +129,35 @@ export function useCardInteraction() {
       pointerId = null;
       s.dragging = false;
 
-      // Gesto corto = intención de voltear, no de girar.
-      if (travelled < MOTION.tapThreshold) {
+      // Gesto corto = intención de voltear, no de girar. Tras un pellizco no
+      // cuenta: soltar el zoom no es tocar la carta.
+      if (!pinched && travelled < MOTION.tapThreshold) {
         s.velocity = 0;
         s.spin += Math.PI;
       }
+    };
+
+    /** Rueda del ratón: exponencial, para que cada paso se sienta igual. */
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      zoomState.target = clampZoom(
+        zoomState.target * Math.exp(-e.deltaY * ZOOM.wheelSensitivity),
+      );
     };
 
     domElement.addEventListener('pointerdown', onDown);
     domElement.addEventListener('pointermove', onMove);
     domElement.addEventListener('pointerup', onUp);
     domElement.addEventListener('pointercancel', onUp);
+    // passive: false — hay que impedir el zoom de la página.
+    domElement.addEventListener('wheel', onWheel, { passive: false });
 
     return () => {
       domElement.removeEventListener('pointerdown', onDown);
       domElement.removeEventListener('pointermove', onMove);
       domElement.removeEventListener('pointerup', onUp);
       domElement.removeEventListener('pointercancel', onUp);
+      domElement.removeEventListener('wheel', onWheel);
     };
   }, [domElement]);
 
