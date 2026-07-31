@@ -94,9 +94,9 @@ void main() {
   vec3 V = normalize(cameraPosition - vWPos);
 
   // Micro-relieve del barniz: rompe el especular perfecto de un plano.
-  float nx = fbm(vUv * vec2(210.0, 290.0)) - 0.5;
-  float ny = fbm(vUv * vec2(290.0, 210.0) + 11.7) - 0.5;
-  N = normalize(N + (T * nx + B * ny) * 0.045);
+  // Un solo muestreo entrega las dos componentes.
+  vec2 micro = vnoise2(vUv * vec2(210.0, 290.0)) - 0.5;
+  N = normalize(N + (T * micro.x + B * micro.y) * 0.045);
 
   float cosTheta = sat(dot(N, V));
   float fresnel = pow(1.0 - cosTheta, 5.0);
@@ -132,9 +132,17 @@ void main() {
   // --- 6. Destellos de diamante -----------------------------------------
   // Sólo donde el arte tiene facetas: brillo muy alto y croma casi nulo.
   float gemMask = smoothstep(0.55, 0.95, l) * (1.0 - smoothstep(0.12, 0.40, c));
-  vec3 gems = sparkleLayer(vUv, uAspect, uTime, uSparkleDensity, cosTheta, 0.0);
-  gems += sparkleLayer(vUv, uAspect, uTime * 1.31 + 4.0, uSparkleDensity * 0.62, cosTheta, 19.0) * 0.8;
-  color += gems * gemMask * 2.4;
+  // Fuera de las facetas el destello no aporta nada: no lo calculamos.
+  if (gemMask > 0.002) {
+    vec3 gems = sparkleLayer(vUv, uAspect, uTime, uSparkleDensity, cosTheta, 0.0);
+#if SPARKLE_LAYERS > 1
+    gems += sparkleLayer(vUv, uAspect, uTime * 1.31 + 4.0, uSparkleDensity * 0.62, cosTheta, 19.0) * 0.8;
+#else
+    // Con una sola capa se compensa la densidad para no perder presencia.
+    gems *= 1.55;
+#endif
+    color += gems * gemMask * 2.4;
+  }
 
   // --- 7. Barniz UV -------------------------------------------------------
   // Reflejo especular ancho del laminado + halo en el borde.

@@ -23,7 +23,8 @@ vec3 foilLayer(vec2 uv, vec3 N, vec3 V, vec3 T, vec3 B, float t, float spin,
 
   // Grano del foil: micro-variación del espesor de la película.
   float grain = fbm(uv * vec2(5.0, 7.0) + vec2(spin * 0.12, t * 0.03)) * 2.4;
-  float micro = fbm(uv * vec2(140.0, 190.0)) - 0.5;
+  // A esta frecuencia el detalle es sub-píxel: una octava basta y de sobra.
+  float micro = vnoise(uv * vec2(140.0, 190.0)) - 0.5;
 
   // Espesor óptico aparente: crece hacia los ángulos rasantes.
   float thickness = scale * (1.0 - cosTheta) + grain * 1.35 + micro * 0.12 +

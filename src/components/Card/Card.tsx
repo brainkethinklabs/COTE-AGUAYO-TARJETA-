@@ -10,10 +10,12 @@ import { createCardBodyGeometry } from './geometry';
 import { useCardInteraction } from './CardInteraction';
 import { useCardTilt } from '../../hooks/useCardTilt';
 import { usePointerLight } from '../../hooks/usePointerLight';
+import { readTiltInput } from '../../hooks/useTiltInput';
 import { INTRO, MOTION } from '../../config';
+import { detectQuality } from '../../quality';
 
-import frontUrl from '../../assets/front.png';
-import backUrl from '../../assets/back.png';
+import frontUrl from '../../assets/front.webp';
+import backUrl from '../../assets/back.webp';
 
 /** Easing de salida suave para la aparición (sin overshoot: es una carta, no un juguete). */
 const easeOutQuint = (t: number) => 1 - Math.pow(1 - t, 5);
@@ -33,25 +35,32 @@ interface CardProps {
 export function Card({ intro }: CardProps) {
   const group = useRef<THREE.Group>(null!);
   const maxAnisotropy = useThree((s) => s.gl.capabilities.getMaxAnisotropy());
+  const quality = useMemo(detectQuality, []);
 
   const [frontMap, backMap] = useTexture([frontUrl, backUrl]);
 
   useLayoutEffect(() => {
     for (const map of [frontMap, backMap]) {
       map.colorSpace = THREE.SRGBColorSpace;
-      map.anisotropy = Math.min(maxAnisotropy, 8);
+      map.anisotropy = Math.min(maxAnisotropy, quality.anisotropy);
       map.minFilter = THREE.LinearMipmapLinearFilter;
       map.magFilter = THREE.LinearFilter;
       map.generateMipmaps = true;
       map.needsUpdate = true;
     }
-  }, [frontMap, backMap, maxAnisotropy]);
+  }, [frontMap, backMap, maxAnisotropy, quality]);
 
   // El reverso lleva el foil algo más contenido: es una ficha, no el arte.
-  const frontMaterial = useMemo(() => new HolographicMaterial(frontMap), [frontMap]);
+  const frontMaterial = useMemo(
+    () => new HolographicMaterial(frontMap, { sparkleLayers: quality.sparkleLayers }),
+    [frontMap, quality],
+  );
   const backMaterial = useMemo(
-    () => new HolographicMaterial(backMap, { softness: 0.72 }),
-    [backMap],
+    () => new HolographicMaterial(backMap, {
+      softness: 0.72,
+      sparkleLayers: quality.sparkleLayers,
+    }),
+    [backMap, quality],
   );
   const bodyGeometry = useMemo(createCardBodyGeometry, []);
   const edgeMaterial = useMemo(createEdgeMaterial, []);
@@ -71,7 +80,7 @@ export function Card({ intro }: CardProps) {
   const { update: updatePointerLight } = usePointerLight();
   const elapsed = useRef(0);
 
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     // Un pico de latencia (cambio de pestaña) no debe teletransportar la carta.
     const dt = Math.min(delta, 1 / 30);
     elapsed.current += dt;
@@ -80,10 +89,12 @@ export function Card({ intro }: CardProps) {
     intro.current = Math.min(intro.current + dt / INTRO.duration, 1);
     const appear = easeOutQuint(intro.current);
 
+    // Puntero en escritorio, giroscopio en el teléfono: misma señal.
+    const input = readTiltInput();
     const spin = updateSpin(dt);
     // Mientras se arrastra manda el gesto: el hover se atenúa.
-    const tilt = updateTilt(state, dt, spin.dragging ? 0.3 : 1);
-    const lightPos = updatePointerLight(state, dt);
+    const tilt = updateTilt(input, dt, spin.dragging ? 0.3 : 1);
+    const lightPos = updatePointerLight(input, dt);
 
     const g = group.current;
 
@@ -98,8 +109,8 @@ export function Card({ intro }: CardProps) {
 
     g.scale.setScalar(THREE.MathUtils.lerp(INTRO.scaleFrom, 1, appear));
 
-    frontMaterial.update(t, intro.current, spin.spin, state.pointer, lightPos);
-    backMaterial.update(t, intro.current, spin.spin, state.pointer, lightPos);
+    frontMaterial.update(t, intro.current, spin.spin, input, lightPos);
+    backMaterial.update(t, intro.current, spin.spin, input, lightPos);
     edgeMaterial.opacity = appear;
   });
 

@@ -4,6 +4,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import vertexShader from '../../shaders/particles.vert.glsl';
 import fragmentShader from '../../shaders/particles.frag.glsl';
 import { PARTICLES } from '../../config';
+import { detectQuality } from '../../quality';
 
 /**
  * Motas de energía alrededor de la carta.
@@ -16,7 +17,7 @@ export function CardParticles({ intro }: { intro: RefObject<number> }) {
   const dpr = useThree((s) => s.viewport.dpr);
 
   const geometry = useMemo(() => {
-    const count = PARTICLES.count;
+    const count = Math.min(PARTICLES.count, detectQuality().particles);
     const positions = new Float32Array(count * 3);
     const seeds = new Float32Array(count * 3);
     const scales = new Float32Array(count);

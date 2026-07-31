@@ -1,7 +1,6 @@
 import { useRef } from 'react';
 import * as THREE from 'three';
-import type { RootState } from '@react-three/fiber';
-import { damp } from './useCardTilt';
+import { damp, type TiltInput } from './useCardTilt';
 
 /** Distancia de la luz por delante del plano de la carta. */
 const LIGHT_DEPTH = 4.2;
@@ -17,10 +16,10 @@ const LIGHT_SPREAD = new THREE.Vector2(5.5, 4.0);
 export function usePointerLight() {
   const position = useRef(new THREE.Vector3(0, 0, LIGHT_DEPTH));
 
-  const update = (state: RootState, dt: number) => {
+  const update = (input: TiltInput, dt: number) => {
     const p = position.current;
-    p.x = damp(p.x, state.pointer.x * LIGHT_SPREAD.x, 4.0, dt);
-    p.y = damp(p.y, state.pointer.y * LIGHT_SPREAD.y, 4.0, dt);
+    p.x = damp(p.x, input.x * LIGHT_SPREAD.x, 4.0, dt);
+    p.y = damp(p.y, input.y * LIGHT_SPREAD.y, 4.0, dt);
     p.z = LIGHT_DEPTH;
     return p;
   };

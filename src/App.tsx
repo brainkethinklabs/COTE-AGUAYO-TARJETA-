@@ -1,17 +1,20 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import * as THREE from 'three';
 import { Canvas } from '@react-three/fiber';
 import { PerformanceMonitor } from '@react-three/drei';
 import { Scene } from './scene/Scene';
+import { detectQuality } from './quality';
 
 /**
  * Visor de la carta.
  *
- * Un canvas a pantalla completa sobre negro absoluto. El DPR se adapta solo:
- * si el equipo no sostiene 60 FPS, baja resolución antes que perder fluidez.
+ * Un canvas a pantalla completa sobre negro absoluto. El DPR arranca en el
+ * techo del perfil detectado y baja solo si el equipo no sostiene 60 FPS:
+ * antes se pierde resolución que fluidez.
  */
 export function App() {
-  const [dpr, setDpr] = useState(1.5);
+  const quality = useMemo(detectQuality, []);
+  const [dpr, setDpr] = useState(() => Math.min(window.devicePixelRatio, quality.maxDpr));
 
   return (
     <Canvas
@@ -28,7 +31,7 @@ export function App() {
       flat
     >
       <PerformanceMonitor
-        onIncline={() => setDpr(Math.min(window.devicePixelRatio, 2))}
+        onIncline={() => setDpr(Math.min(window.devicePixelRatio, quality.maxDpr))}
         onDecline={() => setDpr(1)}
       >
         <Scene />

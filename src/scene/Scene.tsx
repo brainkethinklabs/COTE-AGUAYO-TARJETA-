@@ -1,4 +1,4 @@
-import { Suspense, useRef } from 'react';
+import { Suspense, useMemo, useRef } from 'react';
 import { EffectComposer, Bloom, ToneMapping, SMAA } from '@react-three/postprocessing';
 import { ToneMappingMode } from 'postprocessing';
 
@@ -9,6 +9,8 @@ import { Card } from '../components/Card/Card';
 import { CardGlow } from '../components/Card/CardGlow';
 import { CardParticles } from '../components/Card/CardParticles';
 import { CardReflection } from '../components/Card/CardReflection';
+import { useTiltInputSource } from '../hooks/useTiltInput';
+import { detectQuality } from '../quality';
 
 /**
  * Contenido de la escena: carta, halo, partículas, sombra y luces.
@@ -18,6 +20,10 @@ export function Scene() {
   // Progreso de la entrada, compartido por carta, halo y partículas para que
   // aparezcan como un solo evento y no como tres animaciones sueltas.
   const intro = useRef(0);
+  const quality = useMemo(detectQuality, []);
+
+  // Única instalación de la fuente de inclinación (puntero + giroscopio).
+  useTiltInputSource();
 
   return (
     <>
@@ -29,10 +35,11 @@ export function Scene() {
         <CardGlow intro={intro} />
         <Card intro={intro} />
         <CardParticles intro={intro} />
-        <CardReflection />
+        {/* La sombra re-renderiza la escena cada frame: sólo en escritorio. */}
+        {quality.contactShadows && <CardReflection />}
       </Suspense>
 
-      <EffectComposer multisampling={4} enableNormalPass={false}>
+      <EffectComposer multisampling={quality.msaa} enableNormalPass={false}>
         {/* Bloom sólo sobre lo verdaderamente brillante: destellos y barrido. */}
         <Bloom
           mipmapBlur
@@ -42,7 +49,7 @@ export function Scene() {
           radius={0.72}
         />
         <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
-        {/* MSAA cubre la geometría; SMAA limpia los bordes recortados por shader. */}
+        {/* Sin MSAA (móvil), SMAA es el único antialias: ahí sí hace falta. */}
         <SMAA />
       </EffectComposer>
     </>

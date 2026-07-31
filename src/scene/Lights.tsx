@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { LIGHT_RIG } from '../components/Card/CardMaterial';
 import { usePointerLight } from '../hooks/usePointerLight';
+import { readTiltInput } from '../hooks/useTiltInput';
 
 /**
  * Esquema de tres puntos.
@@ -15,8 +16,8 @@ export function Lights() {
   const pointer = useRef<THREE.PointLight>(null!);
   const { update } = usePointerLight();
 
-  useFrame((state, delta) => {
-    const p = update(state, Math.min(delta, 1 / 30));
+  useFrame((_, delta) => {
+    const p = update(readTiltInput(), Math.min(delta, 1 / 30));
     pointer.current.position.copy(p);
   });
 

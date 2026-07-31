@@ -18,10 +18,17 @@ npm run dev
 | Gesto | Resultado |
 | --- | --- |
 | Mover el cursor | La carta se inclina (máx. 15°) y la luz recorre el foil |
+| **Inclinar el teléfono** | Igual que el cursor, vía giroscopio |
 | Arrastrar | Gira la carta en 3D, con inercia al soltar |
 | Click / tap | La voltea 180° |
 
 Al soltar, un imán suave la alinea siempre a una de las dos caras.
+
+En iOS el sensor sólo se concede tras un gesto real del usuario, así que el
+permiso se pide en el primer toque sobre la carta — el mismo que ya la voltea.
+No hace falta ningún botón. Si se deniega, todo sigue funcionando con el dedo.
+La calibración es relativa a la primera lectura: la carta queda de frente sea
+cual sea el ángulo en que sostengas el teléfono.
 
 ## Arquitectura
 
@@ -51,9 +58,14 @@ src/
     Lights.tsx           key / fill / rim + luz que sigue al cursor
     Environment.tsx      HDRI procedural (sin descargas)
   hooks/
-    useCardTilt.ts       inclinación con easing exponencial
-    usePointerLight.ts   luz especular que persigue al puntero
-  config.ts              único punto de calibración
+    useCardTilt.ts          inclinación con easing exponencial
+    usePointerLight.ts      luz especular que persigue al puntero
+    useDeviceOrientation.ts giroscopio, con permiso iOS y calibración relativa
+    useTiltInput.ts         fuente única: giroscopio si hay, puntero si no
+  config.ts                 único punto de calibración
+  quality.ts                perfil alto/bajo detectado al arrancar
+scripts/
+  optimize-textures.mjs     PNG -> WebP (se corre a mano)
 ```
 
 ### Decisiones técnicas
@@ -70,10 +82,29 @@ src/
   la escena y los uniformes del shader, para que canto y foil no se contradigan.
 - **Sin assets externos.** El entorno HDRI se cocina en GPU con `Lightformer` y
   `frames={1}`: cero descargas, cero red. Todo el build es estático.
-- **Rendimiento.** Un `ShaderMaterial` por cara, un draw call para las
-  partículas, tone mapping ACES y bloom en el `EffectComposer`, y `dpr`
-  adaptativo vía `PerformanceMonitor`: si el equipo no sostiene 60 FPS baja
-  resolución antes que fluidez.
+- **Rendimiento.** El coste está casi todo en el fragment shader, no en la
+  geometría: la carta ocupa media pantalla y cada píxel paga foil, ruido y
+  destellos. Por eso lo que se recorta en móvil es el número de píxeles y las
+  capas de ruido, no los triángulos.
+
+| | Escritorio | Móvil |
+| --- | --- | --- |
+| DPR máximo | 2 | 1.5 |
+| MSAA | 4x | 0 (sólo SMAA) |
+| Sombra de contacto | sí | no |
+| Capas de destellos | 2 | 1 |
+| Partículas | 110 | 70 |
+
+  La sombra de contacto es lo primero que cae: re-renderiza la escena entera
+  cada frame para un efecto que sobre negro casi no se lee. Las capas de
+  destellos son un `#define`, así que no cuestan una rama por píxel.
+
+  En el shader, `fbm` bajó de 3 a 2 octavas, el micro-relieve del barniz pasó
+  de dos `fbm` (24 hashes) a un `vnoise2` (4), y los destellos se saltan por
+  completo donde la máscara de facetas es cero.
+
+- **Texturas en WebP.** 2.48 MB de PNG a 0.36 MB (−85%) sin diferencia visible.
+  Era el mayor coste de carga en móvil.
 
 ## Publicar en GitHub Pages
 

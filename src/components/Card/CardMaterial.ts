@@ -17,11 +17,20 @@ export const LIGHT_RIG = {
  * Se instancia imperativamente (una por cara) para poder escribir uniformes
  * en `useFrame` sin coste de reconciliación de React.
  */
+interface HolographicOptions {
+  /** Atenúa foil y barrido — el reverso pide menos espectáculo que el anverso. */
+  softness?: number;
+  /** Capas de destellos: 1 en móvil, 2 en escritorio. */
+  sparkleLayers?: 1 | 2;
+}
+
 export class HolographicMaterial extends THREE.ShaderMaterial {
-  constructor(map: THREE.Texture, { softness = 1 }: { softness?: number } = {}) {
+  constructor(map: THREE.Texture, { softness = 1, sparkleLayers = 2 }: HolographicOptions = {}) {
     super({
       vertexShader,
       fragmentShader,
+      // El número de capas es una constante de compilación: sin ramas por píxel.
+      defines: { SPARKLE_LAYERS: sparkleLayers },
       transparent: true,
       side: THREE.FrontSide,
       depthWrite: true,
@@ -57,12 +66,18 @@ export class HolographicMaterial extends THREE.ShaderMaterial {
   }
 
   /** Escritura directa de los uniformes animados (sin allocations por frame). */
-  update(time: number, intro: number, spin: number, pointer: THREE.Vector2, lightPos: THREE.Vector3) {
+  update(
+    time: number,
+    intro: number,
+    spin: number,
+    tilt: { x: number; y: number },
+    lightPos: THREE.Vector3,
+  ) {
     const u = this.uniforms;
     u.uTime.value = time;
     u.uIntro.value = intro;
     u.uSpin.value = spin;
-    (u.uPointer.value as THREE.Vector2).copy(pointer);
+    (u.uPointer.value as THREE.Vector2).set(tilt.x, tilt.y);
     (u.uPointerLightPos.value as THREE.Vector3).copy(lightPos);
   }
 }

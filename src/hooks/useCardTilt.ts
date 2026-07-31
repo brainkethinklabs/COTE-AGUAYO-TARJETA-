@@ -1,8 +1,13 @@
 import { useRef } from 'react';
-import type { RootState } from '@react-three/fiber';
 import { MOTION } from '../config';
 
 export interface TiltState {
+  x: number;
+  y: number;
+}
+
+/** Entrada normalizada -1..1: puntero en escritorio, giroscopio en móvil. */
+export interface TiltInput {
   x: number;
   y: number;
 }
@@ -26,10 +31,10 @@ export function useCardTilt() {
    * @param attenuation reduce la inclinación mientras el usuario arrastra:
    *                    en ese momento manda el gesto, no el hover.
    */
-  const update = (state: RootState, dt: number, attenuation = 1) => {
+  const update = (input: TiltInput, dt: number, attenuation = 1) => {
     const max = MOTION.maxTilt * attenuation;
-    const targetY = state.pointer.x * max;
-    const targetX = -state.pointer.y * max;
+    const targetY = input.x * max;
+    const targetX = -input.y * max;
 
     tilt.current.x = damp(tilt.current.x, targetX, MOTION.tiltDamping, dt);
     tilt.current.y = damp(tilt.current.y, targetY, MOTION.tiltDamping, dt);

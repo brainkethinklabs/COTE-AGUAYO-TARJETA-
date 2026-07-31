@@ -40,16 +40,30 @@ float vnoise(vec2 p) {
   return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
 }
 
-/** 3 octavas: suficiente para micro-imperfecciones del laminado. */
+/**
+ * 2 octavas. La tercera costaba 4 hashes por píxel y quedaba enterrada bajo
+ * el foil y el especular: no se distinguía en pantalla.
+ */
 float fbm(vec2 p) {
-  float v = 0.0;
-  float a = 0.5;
-  for (int i = 0; i < 3; i++) {
-    v += a * vnoise(p);
-    p *= 2.03;
-    a *= 0.5;
-  }
-  return v;
+  float v = vnoise(p) * 0.5;
+  v += vnoise(p * 2.03) * 0.25;
+  return v * 1.333;  // renormaliza a ~0..1 tras quitar la octava
+}
+
+/**
+ * Par de ruidos decorrelacionados con un solo muestreo de rejilla.
+ * Usado para el micro-relieve del barniz, donde antes se pagaban dos fbm
+ * completos (24 hashes) para obtener dos números.
+ */
+vec2 vnoise2(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  vec2 a = hash22(i);
+  vec2 b = hash22(i + vec2(1.0, 0.0));
+  vec2 c = hash22(i + vec2(0.0, 1.0));
+  vec2 d = hash22(i + vec2(1.0, 1.0));
+  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
 }
 
 /** Paleta cosenoidal: espectro visible continuo y cíclico. */
