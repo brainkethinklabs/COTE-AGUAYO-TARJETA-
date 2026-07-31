@@ -31,9 +31,11 @@ export function App() {
           powerPreference: 'high-performance',
           stencil: false,
           depth: true,
-          toneMapping: THREE.NoToneMapping, // el tone mapping va en postproceso
+          // La carta comprime sus propias altas luces en el shader: un pase
+          // global de tone mapping volvería gris el blanco del fondo.
+          toneMapping: THREE.NoToneMapping,
         }}
-        onCreated={({ gl }) => gl.setClearColor('#000000', 1)}
+        onCreated={({ gl }) => gl.setClearColor('#ffffff', 1)}
         flat
       >
         <PerformanceMonitor

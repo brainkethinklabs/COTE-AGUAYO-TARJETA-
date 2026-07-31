@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useThree } from '@react-three/fiber';
 import { MOTION } from '../../config';
-import { DEBUG, writeMotionDebug } from '../../debug';
 
 const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), max);
 
@@ -73,10 +72,6 @@ export function useCardInteraction() {
       lastX = e.clientX;
       lastY = e.clientY;
       lastTime = now;
-
-      // Se escribe aquí y no en el frame: así el diagnóstico sigue siendo
-      // legible aunque el bucle de render esté detenido.
-      if (DEBUG) writeMotionDebug(s.spin, s.pitch, 0, 0);
     };
 
     const onUp = (e: PointerEvent) => {

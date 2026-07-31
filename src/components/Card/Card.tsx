@@ -13,7 +13,8 @@ import { usePointerLight } from '../../hooks/usePointerLight';
 import { readTiltInput } from '../../hooks/useTiltInput';
 import { INTRO, MOTION } from '../../config';
 import { detectQuality } from '../../quality';
-import { DEBUG, writeMotionDebug } from '../../debug';
+import { cardMotion } from './motionState';
+import { isGyroActive } from '../../hooks/useTiltInput';
 
 import frontUrl from '../../assets/front.webp';
 import backUrl from '../../assets/back.webp';
@@ -51,14 +52,17 @@ export function Card({ intro }: CardProps) {
     }
   }, [frontMap, backMap, maxAnisotropy, quality]);
 
-  // El reverso lleva el foil algo más contenido: es una ficha, no el arte.
   const frontMaterial = useMemo(
     () => new HolographicMaterial(frontMap, { sparkleLayers: quality.sparkleLayers }),
     [frontMap, quality],
   );
+  // El reverso es un bloque de texto: el foil se contiene y, sobre todo, se
+  // baja el brillo del laminado. Un reflejo sobre un párrafo lo vuelve
+  // ilegible mucho antes que sobre una fotografía.
   const backMaterial = useMemo(
     () => new HolographicMaterial(backMap, {
-      softness: 0.72,
+      softness: 0.5,
+      gloss: 0.32,
       sparkleLayers: quality.sparkleLayers,
     }),
     [backMap, quality],
@@ -94,14 +98,28 @@ export function Card({ intro }: CardProps) {
     const input = readTiltInput();
     const spin = updateSpin(dt);
     // Mientras se arrastra manda el gesto: el hover se atenúa.
-    const tilt = updateTilt(input, dt, spin.dragging ? 0.3 : 1);
+    // Con giroscopio el recorrido se amplía: el gesto es mover el teléfono.
+    const tilt = updateTilt(
+      input,
+      dt,
+      spin.dragging ? 0.3 : 1,
+      isGyroActive() ? MOTION.gyroTiltBoost : 1,
+    );
     const lightPos = updatePointerLight(input, dt);
 
     const g = group.current;
 
     // Flotación: respira, nunca se queda quieta.
-    g.position.y = Math.sin(t * MOTION.floatSpeed) * MOTION.floatAmplitude;
-    g.position.x = Math.sin(t * MOTION.floatSpeed * 0.63 + 1.7) * MOTION.floatAmplitude * 0.45;
+    const floatY = Math.sin(t * MOTION.floatSpeed) * MOTION.floatAmplitude;
+    const floatX = Math.sin(t * MOTION.floatSpeed * 0.63 + 1.7) * MOTION.floatAmplitude * 0.45;
+
+    // Paralaje: la carta se desplaza hacia el lado al que inclinás, con más
+    // retardo que la rotación. Es lo que hace visible que se está moviendo.
+    const offsetX = tilt.px * MOTION.parallax;
+    const offsetY = tilt.py * MOTION.parallax * 0.7;
+
+    g.position.y = floatY + offsetY;
+    g.position.x = floatX + offsetX;
 
     // Rotación = giro del usuario + inclinación hacia el cursor + balanceo de reposo.
     // El orden Euler por defecto (XYZ) aplica X en espacio de mundo, así que
@@ -116,7 +134,13 @@ export function Card({ intro }: CardProps) {
     backMaterial.update(t, intro.current, spin.spin, input, lightPos);
     edgeMaterial.opacity = appear;
 
-    if (DEBUG) writeMotionDebug(spin.spin, spin.pitch, tilt.x, tilt.y);
+    // Lo consumen la sombra y el panel de diagnóstico.
+    cardMotion.spin = spin.spin;
+    cardMotion.pitch = spin.pitch;
+    cardMotion.tiltX = tilt.x;
+    cardMotion.tiltY = tilt.y;
+    cardMotion.floatY = g.position.y;
+    cardMotion.offsetX = g.position.x;
   });
 
   return (

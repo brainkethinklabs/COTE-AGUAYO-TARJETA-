@@ -1,6 +1,6 @@
-/* El fondo debe desaparecer: negro absoluto, sin scroll, sin UI. */
+/* El fondo debe desaparecer: blanco puro, sin scroll, sin UI. */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 * {
@@ -15,7 +15,7 @@ body,
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: #000000;
+  background: #ffffff;
 }
 
 body {

@@ -14,8 +14,6 @@ export interface QualitySettings {
   maxDpr: number;
   /** Muestras de MSAA en el EffectComposer (0 = desactivado). */
   msaa: number;
-  /** La sombra de contacto re-renderiza la escena cada frame: cara en móvil. */
-  contactShadows: boolean;
   /** Capas de destellos en el shader (2 = más vida, 1 = la mitad de coste). */
   sparkleLayers: 1 | 2;
   /** Filtrado anisotrópico de las texturas. */
@@ -27,7 +25,6 @@ const HIGH: QualitySettings = {
   tier: 'high',
   maxDpr: 2,
   msaa: 4,
-  contactShadows: true,
   sparkleLayers: 2,
   anisotropy: 16,
   particles: 110,
@@ -49,7 +46,6 @@ const LOW: QualitySettings = {
   tier: 'low',
   maxDpr: 1.5,
   msaa: 0,
-  contactShadows: false,
   sparkleLayers: 2,
   anisotropy: 8,
   particles: 80,

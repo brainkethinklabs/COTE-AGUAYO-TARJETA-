@@ -35,8 +35,21 @@ export const MOTION = {
   breathSpeed: 0.37,
   /** Inclinación máxima siguiendo el cursor (15°). */
   maxTilt: Math.PI / 12,
+  /**
+   * Con giroscopio la inclinación se amplía a ~26°. En el teléfono el gesto
+   * es el propio aparato: si la carta respondiera con el mismo recorrido que
+   * el mouse, el movimiento se leería como si estuviera pegada a la pantalla.
+   */
+  gyroTiltBoost: 1.75,
   /** Suavizado exponencial (mayor = más rápido). */
   tiltDamping: 3.2,
+  /**
+   * Desplazamiento lateral de la carta hacia el lado al que inclinás.
+   * Es lo que delata que el objeto flota por delante del fondo.
+   */
+  parallax: 0.3,
+  /** Más lento que la inclinación: la traslación llega tarde y da peso. */
+  parallaxDamping: 2.0,
   /** Sensibilidad del arrastre: radianes por pixel. */
   dragSensitivity: 0.0085,
   /** Arrastre vertical: algo menos sensible, el recorrido es más corto. */

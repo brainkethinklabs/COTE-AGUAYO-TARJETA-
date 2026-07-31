@@ -20,12 +20,20 @@ export const LIGHT_RIG = {
 interface HolographicOptions {
   /** Atenúa foil y barrido — el reverso pide menos espectáculo que el anverso. */
   softness?: number;
+  /**
+   * Brillo del laminado (especular + barniz). Por debajo de 1 el reflejo deja
+   * de competir con la tinta: es lo que hace legible un bloque de texto.
+   */
+  gloss?: number;
   /** Capas de destellos: 1 en móvil, 2 en escritorio. */
   sparkleLayers?: 1 | 2;
 }
 
 export class HolographicMaterial extends THREE.ShaderMaterial {
-  constructor(map: THREE.Texture, { softness = 1, sparkleLayers = 2 }: HolographicOptions = {}) {
+  constructor(
+    map: THREE.Texture,
+    { softness = 1, gloss = 1, sparkleLayers = 2 }: HolographicOptions = {},
+  ) {
     super({
       vertexShader,
       fragmentShader,
@@ -48,6 +56,7 @@ export class HolographicMaterial extends THREE.ShaderMaterial {
         uCurvature: { value: 0.006 },
 
         uFoil: { value: HOLO.foil * softness },
+        uGloss: { value: gloss },
         uFilmScale: { value: HOLO.filmScale },
         uAniso: { value: HOLO.anisotropy },
         uSparkleDensity: { value: HOLO.sparkleDensity },

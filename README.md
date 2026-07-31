@@ -1,7 +1,7 @@
 # Carta holográfica — José Tomás (Cote) Aguayo
 
 Visor 3D de una única carta coleccionable. No es un sitio, no es una landing:
-sólo la carta, flotando sobre negro absoluto.
+sólo la carta, flotando sobre blanco, con su sombra proyectada detrás.
 
 ## Correr
 
@@ -49,10 +49,10 @@ src/
     CardBack.tsx         reverso
     CardFace.tsx         cara compartida (geometría + material)
     CardMaterial.ts      ShaderMaterial holográfico + material del canto
-    CardGlow.tsx         halo aditivo detrás de la carta
-    CardParticles.tsx    motas de energía (1 draw call, animadas en GPU)
-    CardReflection.tsx   sombra de contacto difusa
+    CardParticles.tsx    motas doradas (1 draw call, animadas en GPU)
+    CardReflection.tsx   sombra proyectada, procedural
     CardInteraction.ts   arrastre, inercia, volteo y magnetismo
+    motionState.ts       estado de movimiento compartido con la sombra
     geometry.ts          contorno redondeado, cuerpo extruido, meseta
   shaders/
     lib.glsl             ruido, espectro, GGX acotado
@@ -91,6 +91,17 @@ scripts/
   la escena y los uniformes del shader, para que canto y foil no se contradigan.
 - **Sin assets externos.** El entorno HDRI se cocina en GPU con `Lightformer` y
   `frames={1}`: cero descargas, cero red. Todo el build es estático.
+- **Fondo blanco, sin bloom ni tone mapping global.** Los dos son
+  incompatibles con un fondo claro: el bloom hace brillar todo lo que supera
+  un umbral de luminancia, y un blanco lo supera siempre; ACES mapea el
+  blanco lineal a ~0.80, o sea gris claro. La carta comprime sus propias
+  altas luces en el fragment shader, con una ganancia que devuelve el realce
+  de medios que aportaba ACES. Queda un único pase: antialias.
+- **La sombra va sobre un plano vertical**, no sobre un suelo. La cámara mira
+  en horizontal, así que un plano de suelo se vería exactamente de canto y la
+  sombra sería una línea. La lectura correcta es la de un objeto flotando
+  delante de una pared: la silueta se estrecha al girar la carta y se
+  desplaza con la luz principal. Un solo draw call, sin mapa de sombras.
 - **Rendimiento.** El coste está casi todo en el fragment shader, no en la
   geometría: la carta ocupa media pantalla y cada píxel paga foil, ruido y
   destellos. Por eso lo que se recorta en móvil es el número de píxeles y las

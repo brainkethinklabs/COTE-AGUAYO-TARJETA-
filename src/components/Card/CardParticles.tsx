@@ -55,7 +55,8 @@ export function CardParticles({ intro }: { intro: RefObject<number> }) {
         fragmentShader,
         transparent: true,
         depthWrite: false,
-        blending: THREE.AdditiveBlending,
+        // Normal, no aditivo: sobre fondo blanco el aditivo no dibuja nada.
+        blending: THREE.NormalBlending,
         toneMapped: false,
         uniforms: {
           uTime: { value: 0 },

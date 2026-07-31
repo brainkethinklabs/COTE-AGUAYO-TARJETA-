@@ -26,6 +26,9 @@ uniform float uRadius;     // radio de las esquinas redondeadas
 uniform vec2 uPointer;     // cursor normalizado (-1..1)
 
 uniform float uFoil;
+/** Brillo del laminado: especular + barniz. Se baja en el reverso, que es
+ *  texto y necesita leerse antes que impresionar. */
+uniform float uGloss;
 uniform float uFilmScale;
 uniform float uAniso;
 uniform float uSparkleDensity;
@@ -53,7 +56,7 @@ vec3 lightContribution(vec3 N, vec3 V, vec3 P, vec3 lightPos, vec3 lightColor,
   float ndl = sat(dot(N, L));
   // Wrap lighting: la impresión mate no se apaga de golpe.
   float diff = pow(ndl * 0.5 + 0.5, 1.6);
-  float spec = ggx(N, V, L, roughness) * ndl * specular;
+  float spec = ggx(N, V, L, roughness) * ndl * specular * uGloss;
   return lightColor * (diff * 0.5 + spec);
 }
 
@@ -146,14 +149,26 @@ void main() {
 
   // --- 7. Barniz UV -------------------------------------------------------
   // Reflejo especular ancho del laminado + halo en el borde.
-  color += vec3(0.55, 0.60, 0.72) * fresnel * 0.55;
-  color = mix(color, color * 1.12, sat(fresnel * 2.0));
+  color += vec3(0.55, 0.60, 0.72) * fresnel * 0.55 * uGloss;
+  color = mix(color, color * 1.12, sat(fresnel * 2.0) * uGloss);
 
-  // --- 8. Entrada ---------------------------------------------------------
+  // --- 8. Rango dinámico --------------------------------------------------
+  // Ya no hay pase de tone mapping global: oscurecería el blanco del fondo.
+  // La carta hace su propia curva.
+  //
+  // ACES no sólo comprimía las altas luces, también levantaba los medios
+  // (0.18 salía como 0.27). Al quitarlo hay que devolver esa ganancia o la
+  // impresión se ve apagada; y como el blanco del fondo ya no pasa por aquí,
+  // subirla es gratis.
+  color *= 1.3;
+  // Rodilla suave: por debajo de 0.7 no toca nada, sólo evita que el foil y
+  // los destellos recorten en seco al saturar.
+  color = color / (1.0 + max(color - 0.7, vec3(0.0)) * 1.3);
+
+  // --- 9. Entrada ---------------------------------------------------------
+  // Sólo se funde el alfa. Atenuar además el color oscurecería la carta al
+  // aparecer: el blending ya multiplica por alfa una vez.
   float appear = smoothstep(0.0, 0.55, uIntro);
-  color *= mix(0.0, 1.0, appear);
-  // Pequeño exceso de brillo que se disuelve.
-  color += vec3(0.35, 0.45, 0.70) * (1.0 - smoothstep(0.0, 0.8, uIntro)) * appear * 0.5;
 
   gl_FragColor = vec4(color, tex.a * appear * silhouette);
 }

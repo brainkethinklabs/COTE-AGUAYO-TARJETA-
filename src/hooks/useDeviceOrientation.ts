@@ -8,8 +8,11 @@ export interface OrientationState {
   status: string;
 }
 
-/** Grados de inclinación que equivalen al recorrido completo (-1..1). */
-const RANGE_DEG = 28;
+/**
+ * Grados de inclinación que equivalen al recorrido completo (-1..1).
+ * Cuanto menor, más reacciona la carta a un movimiento pequeño del teléfono.
+ */
+const RANGE_DEG = 20;
 
 /** iOS 13+ exige pedir permiso desde un gesto del usuario. */
 type PermissionCapableDOE = typeof DeviceOrientationEvent & {
