@@ -29,7 +29,11 @@ jobs:
       - run: npm ci
       - run: npm run build
 
+      # `enablement` activa GitHub Pages con el token del propio workflow,
+      # sin depender de que esté configurado a mano en Settings -> Pages.
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
