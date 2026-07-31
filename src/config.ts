@@ -93,7 +93,7 @@ export const HOLO = {
 } as const;
 
 export const PARTICLES = {
-  count: 110,
+  count: 150,
   radius: 3.4,
   speed: 0.055,
   size: 26,

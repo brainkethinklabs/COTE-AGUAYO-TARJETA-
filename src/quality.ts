@@ -27,7 +27,7 @@ const HIGH: QualitySettings = {
   msaa: 4,
   sparkleLayers: 2,
   anisotropy: 16,
-  particles: 110,
+  particles: 150,
 };
 
 /**
@@ -48,7 +48,7 @@ const LOW: QualitySettings = {
   msaa: 0,
   sparkleLayers: 2,
   anisotropy: 8,
-  particles: 80,
+  particles: 110,
 };
 
 /**
