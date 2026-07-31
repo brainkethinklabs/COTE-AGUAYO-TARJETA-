@@ -39,6 +39,16 @@ export const MOTION = {
   tiltDamping: 3.2,
   /** Sensibilidad del arrastre: radianes por pixel. */
   dragSensitivity: 0.0085,
+  /** Arrastre vertical: algo menos sensible, el recorrido es más corto. */
+  pitchSensitivity: 0.006,
+  /**
+   * Tope de inclinación vertical (50°). El eje vertical NO da la vuelta:
+   * la carta se asoma por arriba o por abajo, pero siempre vuelve al frente.
+   * Sólo el eje horizontal completa los 360° hacia el reverso.
+   */
+  maxPitch: Math.PI / 3.6,
+  /** Fuerza con la que el eje vertical regresa al frente al soltar. */
+  pitchReturn: 3.4,
   /** Fricción de la inercia tras soltar. */
   inertiaFriction: 3.6,
   /** Fuerza del imán que alinea la carta a la cara más cercana. */

@@ -9,7 +9,6 @@ import { Card } from '../components/Card/Card';
 import { CardGlow } from '../components/Card/CardGlow';
 import { CardParticles } from '../components/Card/CardParticles';
 import { CardReflection } from '../components/Card/CardReflection';
-import { useTiltInputSource } from '../hooks/useTiltInput';
 import { detectQuality } from '../quality';
 
 /**
@@ -21,9 +20,6 @@ export function Scene() {
   // aparezcan como un solo evento y no como tres animaciones sueltas.
   const intro = useRef(0);
   const quality = useMemo(detectQuality, []);
-
-  // Única instalación de la fuente de inclinación (puntero + giroscopio).
-  useTiltInputSource();
 
   return (
     <>

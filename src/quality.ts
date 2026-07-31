@@ -29,18 +29,25 @@ const HIGH: QualitySettings = {
   msaa: 4,
   contactShadows: true,
   sparkleLayers: 2,
-  anisotropy: 8,
+  anisotropy: 16,
   particles: 110,
 };
 
+/**
+ * Móvil. El DPR sube a 2 — es lo que más define la nitidez percibida, y el
+ * presupuesto lo permite tras aligerar el shader y quitar la sombra. Si aun
+ * así no llega a 60 FPS, `PerformanceMonitor` lo baja en caliente.
+ * El filtrado anisotrópico se mantiene alto: cuesta muy poco y es
+ * justamente lo que salva la textura cuando la carta se inclina.
+ */
 const LOW: QualitySettings = {
   tier: 'low',
-  maxDpr: 1.5,
+  maxDpr: 2,
   msaa: 0,
   contactShadows: false,
-  sparkleLayers: 1,
-  anisotropy: 4,
-  particles: 70,
+  sparkleLayers: 2,
+  anisotropy: 8,
+  particles: 80,
 };
 
 /**

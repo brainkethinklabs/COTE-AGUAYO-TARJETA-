@@ -23,8 +23,12 @@ for (const { from, to } of SOURCES) {
   const before = (await stat(from)).size;
 
   await sharp(from)
-    // quality 90 + effort 6: el texto fino y los diamantes no toleran menos.
-    .webp({ quality: 90, effort: 6 })
+    // Se duplica la resolución con Lanczos antes de comprimir. No inventa
+    // detalle que no exista, pero evita que la GPU tenga que magnificar la
+    // textura en pantallas de DPR alto, que es lo que la volvía blanda.
+    .resize({ width: 1500, height: 2100, kernel: 'lanczos3' })
+    // quality 95: el texto fino y los diamantes no toleran menos.
+    .webp({ quality: 95, effort: 6 })
     .toFile(to);
 
   const after = (await stat(to)).size;

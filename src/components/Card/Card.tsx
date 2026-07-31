@@ -13,6 +13,7 @@ import { usePointerLight } from '../../hooks/usePointerLight';
 import { readTiltInput } from '../../hooks/useTiltInput';
 import { INTRO, MOTION } from '../../config';
 import { detectQuality } from '../../quality';
+import { DEBUG, writeMotionDebug } from '../../debug';
 
 import frontUrl from '../../assets/front.webp';
 import backUrl from '../../assets/back.webp';
@@ -103,8 +104,10 @@ export function Card({ intro }: CardProps) {
     g.position.x = Math.sin(t * MOTION.floatSpeed * 0.63 + 1.7) * MOTION.floatAmplitude * 0.45;
 
     // Rotación = giro del usuario + inclinación hacia el cursor + balanceo de reposo.
+    // El orden Euler por defecto (XYZ) aplica X en espacio de mundo, así que
+    // el eje vertical sigue siendo vertical por mucho que la carta haya girado.
     g.rotation.y = spin.spin + tilt.y;
-    g.rotation.x = tilt.x + Math.sin(t * MOTION.breathSpeed) * MOTION.breathTilt;
+    g.rotation.x = spin.pitch + tilt.x + Math.sin(t * MOTION.breathSpeed) * MOTION.breathTilt;
     g.rotation.z = Math.sin(t * MOTION.breathSpeed * 0.79 + 1.3) * MOTION.breathTilt * 0.55;
 
     g.scale.setScalar(THREE.MathUtils.lerp(INTRO.scaleFrom, 1, appear));
@@ -112,6 +115,8 @@ export function Card({ intro }: CardProps) {
     frontMaterial.update(t, intro.current, spin.spin, input, lightPos);
     backMaterial.update(t, intro.current, spin.spin, input, lightPos);
     edgeMaterial.opacity = appear;
+
+    if (DEBUG) writeMotionDebug(spin.spin, spin.pitch, tilt.x, tilt.y);
   });
 
   return (

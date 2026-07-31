@@ -18,11 +18,20 @@ npm run dev
 | Gesto | Resultado |
 | --- | --- |
 | Mover el cursor | La carta se inclina (máx. 15°) y la luz recorre el foil |
-| **Inclinar el teléfono** | Igual que el cursor, vía giroscopio |
-| Arrastrar | Gira la carta en 3D, con inercia al soltar |
+| Inclinar el teléfono | Igual que el cursor, vía giroscopio |
+| Arrastrar en horizontal | Giro de 360°, con inercia; es como se llega al reverso |
+| Arrastrar en vertical | Asoma por arriba o por abajo (máx. 50°) y vuelve al frente |
 | Click / tap | La voltea 180° |
 
-Al soltar, un imán suave la alinea siempre a una de las dos caras.
+Los dos ejes se comportan distinto a propósito. El horizontal da la vuelta
+completa, con un imán suave que al soltar alinea siempre a una de las dos
+caras. El vertical está acotado y tiene retorno elástico: una carta no se mira
+de canto ni cabeza abajo, así que asomarse aporta volumen pero el frente
+siempre vuelve a estar de cara.
+
+Con `?debug` en la URL aparece un panel con FPS, perfil de calidad, estado del
+sensor y ángulos actuales. Sin ese parámetro no existe ningún elemento de
+interfaz.
 
 En iOS el sensor sólo se concede tras un gesto real del usuario, así que el
 permiso se pide en el primer toque sobre la carta — el mismo que ya la voltea.

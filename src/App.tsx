@@ -4,6 +4,10 @@ import { Canvas } from '@react-three/fiber';
 import { PerformanceMonitor } from '@react-three/drei';
 import { Scene } from './scene/Scene';
 import { detectQuality } from './quality';
+import { DebugOverlay } from './DebugOverlay';
+
+/** El panel de diagnóstico sólo existe si se pide explícitamente. */
+const DEBUG = location.search.includes('debug');
 
 /**
  * Visor de la carta.
@@ -17,25 +21,29 @@ export function App() {
   const [dpr, setDpr] = useState(() => Math.min(window.devicePixelRatio, quality.maxDpr));
 
   return (
-    <Canvas
-      dpr={dpr}
-      gl={{
-        antialias: false, // lo resuelve el EffectComposer (MSAA + SMAA)
-        alpha: false,
-        powerPreference: 'high-performance',
-        stencil: false,
-        depth: true,
-        toneMapping: THREE.NoToneMapping, // el tone mapping va en postproceso
-      }}
-      onCreated={({ gl }) => gl.setClearColor('#000000', 1)}
-      flat
-    >
-      <PerformanceMonitor
-        onIncline={() => setDpr(Math.min(window.devicePixelRatio, quality.maxDpr))}
-        onDecline={() => setDpr(1)}
+    <>
+      {DEBUG && <DebugOverlay />}
+      <Canvas
+        dpr={dpr}
+        gl={{
+          antialias: false, // lo resuelve el EffectComposer (MSAA + SMAA)
+          alpha: false,
+          powerPreference: 'high-performance',
+          stencil: false,
+          depth: true,
+          toneMapping: THREE.NoToneMapping, // el tone mapping va en postproceso
+        }}
+        onCreated={({ gl }) => gl.setClearColor('#000000', 1)}
+        flat
       >
-        <Scene />
-      </PerformanceMonitor>
-    </Canvas>
+        <PerformanceMonitor
+          onIncline={() => setDpr(Math.min(window.devicePixelRatio, quality.maxDpr))}
+          // Escalón intermedio, no caída a 1: prioriza nitidez mientras se pueda.
+          onDecline={() => setDpr(1.25)}
+        >
+          <Scene />
+        </PerformanceMonitor>
+      </Canvas>
+    </>
   );
 }
