@@ -1,0 +1,37 @@
+/* El fondo debe desaparecer: negro absoluto, sin scroll, sin UI. */
+:root {
+  color-scheme: dark;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000000;
+}
+
+body {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+  overscroll-behavior: none;
+}
+
+canvas {
+  display: block;
+  outline: none;
+  cursor: grab;
+  /* El arrastre gira la carta: el navegador no debe interpretarlo como scroll. */
+  touch-action: none;
+}
+
+canvas:active {
+  cursor: grabbing;
+}
