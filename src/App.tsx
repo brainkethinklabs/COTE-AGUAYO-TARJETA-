@@ -40,8 +40,13 @@ export function App() {
       >
         <PerformanceMonitor
           onIncline={() => setDpr(Math.min(window.devicePixelRatio, quality.maxDpr))}
-          // Escalón intermedio, no caída a 1: prioriza nitidez mientras se pueda.
-          onDecline={() => setDpr(1.25)}
+          // Si 2 no se sostiene, cae a 1.5 (el punto estable conocido), no a
+          // un valor de pánico: prioriza nitidez mientras se pueda.
+          onDecline={() => setDpr(1.5)}
+          // Si sube y baja 3 veces, es que está justo en el límite: se fija
+          // en 1.5 definitivo antes que quedar oscilando entre nitidez y lag.
+          flipflops={3}
+          onFallback={() => setDpr(1.5)}
         >
           <Scene />
         </PerformanceMonitor>

@@ -33,21 +33,25 @@ const HIGH: QualitySettings = {
 /**
  * Móvil.
  *
- * El DPR es lo único que escala con el cuadrado: a DPR 2 en un iPhone de
- * `devicePixelRatio` 3 se midieron 30 FPS. Vuelve a 1.5, que es el punto
- * donde este shader sostiene 60.
+ * El DPR sube a 2. Hubo una medición de 30 FPS a ese nivel, pero es anterior
+ * a quitar el Bloom y el tone mapping: el bloom era un blur multi-pase sobre
+ * el buffer HDR a resolución completa, con diferencia el pase más caro. Al
+ * pasar a fondo blanco desapareció y ese presupuesto quedó libre.
  *
- * Bajar el DPR **no** deshace la ganancia de nitidez: la resolución de la
- * textura y la del render son independientes. Las texturas siguen al doble
- * (1500x2100) y la anisotropía alta, que es lo que evita que la impresión se
- * vea blanda — y ambas cuestan ancho de banda, no fill rate.
+ * De todas formas no se apuesta a ciegas: el DPR arranca aquí y
+ * `PerformanceMonitor` lo baja por escalones si el equipo no sostiene 60.
+ *
+ * Sin MSAA a propósito: la silueta de la carta se recorta con un SDF en el
+ * shader, que ya entrega bordes suavizados, así que el multisampling
+ * apenas aportaría sobre el coste que tiene. SMAA cubre el resto.
  */
 const LOW: QualitySettings = {
   tier: 'low',
-  maxDpr: 1.5,
+  maxDpr: 2,
   msaa: 0,
   sparkleLayers: 2,
-  anisotropy: 8,
+  // Prácticamente gratis y es justo lo que salva la textura al inclinarse.
+  anisotropy: 16,
   particles: 110,
 };
 
